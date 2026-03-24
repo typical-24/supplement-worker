@@ -1,0 +1,180 @@
+export default {
+  async fetch(request, env) {
+
+    if (request.method === "GET") {
+      return new Response("Telegram Supplement Worker Running");
+    }
+
+    if (request.method !== "POST") {
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+
+    let update;
+
+    try {
+      update = await request.json();
+    } catch {
+      return new Response("Bad Request", { status: 400 });
+    }
+
+    const message = update?.message;
+
+    if (!message?.text || !message?.chat?.id) {
+      return new Response("OK");
+    }
+
+    const chatId = message.chat.id;
+    const text = message.text.trim();
+
+    console.log("Received:", text);
+
+    if (text === "/help") {
+      await sendTelegramMessage(env, chatId,
+`Commands
+
+Eintragen:
+Magnesium 400 mg
+Vitamin D3 2000 IU
+
+/help`);
+      return new Response("OK");
+    }
+
+    const parsed = parseSupplementInput(text);
+
+    if (!parsed) {
+      await sendTelegramMessage(env, chatId,
+`Format nicht erkannt.
+
+Beispiel:
+Magnesium 400 mg`);
+      return new Response("OK");
+    }
+
+    try {
+
+      await createNotionEntry(env, parsed);
+
+      await sendTelegramMessage(
+        env,
+        chatId,
+`Eingetragen
+${parsed.name} — ${parsed.amount} ${parsed.unit}`
+      );
+
+    } catch (err) {
+
+      console.error("NOTION ERROR:", err.message);
+
+      await sendTelegramMessage(
+        env,
+        chatId,
+`Notion Fehler
+${err.message}`
+      );
+    }
+
+    return new Response("OK");
+  }
+};
+
+
+function parseSupplementInput(text) {
+
+  const regex = /^(.+?)\s+(\d+(?:[.,]\d+)?)\s*([a-zA-Zµ]+)$/i;
+
+  const match = text.match(regex);
+
+  if (!match) return null;
+
+  return {
+    name: match[1].trim(),
+    amount: parseFloat(match[2].replace(",", ".")),
+    unit: match[3].trim()
+  };
+}
+
+
+async function createNotionEntry(env, parsed) {
+
+  const payload = {
+
+    parent: {
+      type: "data_source_id",
+      data_source_id: env.NOTION_CLAUDE_DB_ID
+    },
+
+    properties: {
+
+      Name: {
+        title: [
+          { text: { content: parsed.name } }
+        ]
+      },
+
+      Menge: {
+        number: parsed.amount
+      },
+
+      Unit: {
+        select: {
+          name: parsed.unit
+        }
+      },
+
+      Source: {
+        select: {
+          name: "Telegram"
+        }
+      },
+
+      Done: {
+        checkbox: false
+      }
+
+    }
+
+  };
+
+  console.log("NOTION PAYLOAD:", JSON.stringify(payload));
+
+  const res = await fetch(
+    "https://api.notion.com/v1/pages",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.NOTION_TOKEN}`,
+        "Content-Type": "application/json",
+        "Notion-Version": "2025-09-03"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+
+  const body = await res.text();
+
+  console.log("NOTION STATUS:", res.status);
+  console.log("NOTION BODY:", body);
+
+  if (!res.ok) {
+    throw new Error(`Notion ${res.status}: ${body}`);
+  }
+}
+
+
+async function sendTelegramMessage(env, chatId, text) {
+
+  await fetch(
+    `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text
+      })
+    }
+  );
+}

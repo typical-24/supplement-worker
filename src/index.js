@@ -42,6 +42,15 @@ const EVIDENZ_MAP = {
   "nmn": "★☆☆ Schwach"
 };
 
+const HELP_MESSAGE = `Willkommen bei SuppPowerBot
+
+Sende Supplements im Format:
+Magnesium 400 mg
+Iron 20 mg
+Curcumin 500 mg`;
+
+const DEFAULT_REGISTRY_DATABASE_ID = "ea5b8880046e4684b469a07cec46cb63";
+
 export default {
   async fetch(request, env) {
     if (request.method === "GET") {
@@ -73,17 +82,44 @@ export default {
       await sendTelegramMessage(
         env,
         chatId,
-`Willkommen bei SuppPowerBot
-
-Sende Supplements im Format:
-Magnesium 400 mg
-Iron 20 mg
-Curcumin 500 mg`
+        HELP_MESSAGE
       );
       return new Response("OK");
     }
 
-    const parsed = parseSupplementInput(text);
+    if (text === "/help") {
+      await sendTelegramMessage(
+        env,
+        chatId,
+        HELP_MESSAGE
+      );
+      return new Response("OK");
+    }
+
+    console.log("INPUT TEXT:", text);
+
+    const freeParsed = parseSupplementInput(text);
+    let registryEntry = null;
+    let registryParsed = null;
+    let parsed = freeParsed;
+
+    console.log("PARSED FREE INPUT:", freeParsed);
+
+    if (!parsed) {
+      console.log("REGISTRY LOOKUP INPUT:", text);
+
+      try {
+        registryEntry = await findRegistryEntry(env, text);
+      } catch (err) {
+        console.error("REGISTRY LOOKUP ERROR:", err.message);
+      }
+
+      registryParsed = buildParsedFromRegistry(text, registryEntry);
+      parsed = registryParsed;
+    }
+
+    console.log("REGISTRY MATCH:", registryEntry);
+    console.log("REGISTRY PARSED:", registryParsed);
 
     if (!parsed) {
       await sendTelegramMessage(
@@ -98,7 +134,14 @@ Magnesium 400 mg`
     }
 
     try {
-      const portion = await createNotionEntry(env, parsed);
+      const result = {
+        portion: await createNotionEntry(env, parsed)
+      };
+      const displayPortion = parsed?.requestedPortion ?? result.portion;
+      const isRegistryPortion = parsed?.requestedPortion != null;
+      console.log("RESULT PORTION:", result?.portion);
+      console.log("REQUESTED PORTION:", parsed?.requestedPortion);
+      console.log("DISPLAY PORTION:", displayPortion);
       const quelle = getExamineLink(parsed.name);
       const evidenz = getEvidenz(parsed.name);
       const todaySupplements = await getTodaySupplements(env);
@@ -108,7 +151,11 @@ Magnesium 400 mg`
 `Eingetragen
 ${parsed.name} — ${parsed.amount} ${parsed.unit}`;
 
-      if (portion > 1) confirmMsg += `\nPortion ${portion}`;
+      if (isRegistryPortion) {
+        confirmMsg += `\nPortion ${displayPortion}`;
+      } else if (displayPortion > 1) {
+        confirmMsg += `\nPortion ${displayPortion}`;
+      }
       if (evidenz) confirmMsg += `\n${evidenz}`;
       if (quelle) confirmMsg += `\n${quelle}`;
       if (konflikt) {
@@ -154,6 +201,22 @@ function normalizeKey(value) {
     .replace(/\u00df/g, "ss");
 }
 
+function formatNotionId(id) {
+  if (!id) return id;
+
+  const clean = id.replace(/-/g, "");
+
+  if (clean.length !== 32) return id;
+
+  return [
+    clean.slice(0, 8),
+    clean.slice(8, 12),
+    clean.slice(12, 16),
+    clean.slice(16, 20),
+    clean.slice(20)
+  ].join("-");
+}
+
 function getExamineLink(name) {
   const input = normalizeKey(name);
   const keys = Object.keys(EXAMINE_SLUGS);
@@ -193,6 +256,251 @@ function getConflictText(newName, todayList) {
 
   if (name.includes("curcumin") && hasIron) {
     return "Curcumin kann Eisenaufnahme blockieren (Chelatbildung). Abstand empfohlen.";
+  }
+
+  return null;
+}
+
+function extractTextValue(property) {
+  if (!property) return "";
+  if (Array.isArray(property.title)) {
+    return property.title.map((item) => item?.plain_text || item?.text?.content || "").join("").trim();
+  }
+  if (Array.isArray(property.rich_text)) {
+    return property.rich_text.map((item) => item?.plain_text || item?.text?.content || "").join("").trim();
+  }
+  if (property.select?.name) {
+    return String(property.select.name).trim();
+  }
+  if (Array.isArray(property.multi_select)) {
+    return property.multi_select.map((item) => item?.name || "").filter(Boolean).join(", ").trim();
+  }
+  if (typeof property.number === "number") {
+    return String(property.number);
+  }
+  if (typeof property.checkbox === "boolean") {
+    return property.checkbox ? "true" : "false";
+  }
+  if (property.formula) {
+    if (typeof property.formula.string === "string") return property.formula.string.trim();
+    if (typeof property.formula.number === "number") return String(property.formula.number);
+    if (typeof property.formula.boolean === "boolean") return property.formula.boolean ? "true" : "false";
+  }
+  return "";
+}
+
+function extractNumberValue(property) {
+  if (!property) return null;
+  if (typeof property.number === "number") {
+    return property.number;
+  }
+  if (property.formula && typeof property.formula.number === "number") {
+    return property.formula.number;
+  }
+
+  const text = extractTextValue(property).replace(",", ".");
+  const match = text.match(/-?\d+(?:\.\d+)?/);
+  return match ? parseFloat(match[0]) : null;
+}
+
+function extractCheckboxValue(property) {
+  if (!property) return false;
+  if (typeof property.checkbox === "boolean") {
+    return property.checkbox;
+  }
+  if (property.formula && typeof property.formula.boolean === "boolean") {
+    return property.formula.boolean;
+  }
+  return false;
+}
+
+function extractAliases(property) {
+  if (!property) return [];
+  if (Array.isArray(property.multi_select)) {
+    return property.multi_select.map((item) => String(item?.name || "").trim()).filter(Boolean);
+  }
+
+  const text = extractTextValue(property);
+  if (!text) return [];
+
+  return text
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getPropertyByNameOrType(properties, propertyName, propertyType) {
+  if (properties?.[propertyName]) {
+    return properties[propertyName];
+  }
+
+  const values = Object.values(properties || {});
+
+  for (let i = 0; i < values.length; i++) {
+    if (values[i]?.type === propertyType) {
+      return values[i];
+    }
+  }
+
+  return null;
+}
+
+function buildRegistryEntryFromPage(page) {
+  const properties = page?.properties || {};
+  const nameProperty = getPropertyByNameOrType(properties, "Name", "title");
+  const aliasesProperty = getPropertyByNameOrType(properties, "Aliases", "rich_text");
+  const activeProperty = getPropertyByNameOrType(properties, "Aktiv", "checkbox");
+  const formProperty = getPropertyByNameOrType(properties, "Form", "multi_select");
+  const hauptwirkstoffProperty = getPropertyByNameOrType(properties, "Hauptwirkstoff", "rich_text");
+  const hinweiseProperty = getPropertyByNameOrType(properties, "Hinweise", "rich_text");
+  const konflikteProperty = getPropertyByNameOrType(properties, "Konflikte", "rich_text");
+  const inhaltsstoffeProperty = getPropertyByNameOrType(properties, "Inhaltsstoffe", "rich_text");
+  const standardPortionProperty = getPropertyByNameOrType(properties, "Standard Portion", "number");
+  const mgProPortionProperty = getPropertyByNameOrType(properties, "mg pro Portion", "number");
+  const mgProKapselProperty = getPropertyByNameOrType(properties, "mg pro Kapsel", "number");
+  const kapselnProPortionProperty = getPropertyByNameOrType(properties, "Kapseln pro Portion", "number");
+
+  return {
+    name: extractTextValue(nameProperty),
+    typ: extractTextValue(properties.Typ),
+    hauptwirkstoff: extractTextValue(hauptwirkstoffProperty),
+    portionEinheit: extractTextValue(properties["Portion Einheit"]),
+    standardPortion: extractNumberValue(standardPortionProperty),
+    mgProPortion: extractNumberValue(mgProPortionProperty),
+    mgProKapsel: extractNumberValue(mgProKapselProperty),
+    kapselnProPortion: extractNumberValue(kapselnProPortionProperty),
+    form: Array.isArray(formProperty?.multi_select)
+      ? formProperty.multi_select.map((item) => item?.name || "").filter(Boolean).join(", ").trim()
+      : extractTextValue(formProperty),
+    hinweise: extractTextValue(hinweiseProperty),
+    konflikte: extractTextValue(konflikteProperty),
+    inhaltsstoffe: extractTextValue(inhaltsstoffeProperty),
+    aliases: extractAliases(aliasesProperty),
+    active: extractCheckboxValue(activeProperty)
+  };
+}
+
+function scoreRegistryMatch(entry, inputText) {
+  const input = normalizeKey(String(inputText || "").replace(/\bportion\s+\d+(?:[.,]\d+)?\b/gi, ""));
+  const entryName = normalizeKey(entry.name);
+  const aliases = entry.aliases.map((alias) => normalizeKey(alias)).filter(Boolean);
+  const normalizedInput = input.trim();
+
+  if (entryName && normalizedInput === entryName) {
+    return 400 + (entry.active ? 100 : 0);
+  }
+
+  if (aliases.includes(normalizedInput)) {
+    return 300 + (entry.active ? 100 : 0);
+  }
+
+  if (entryName && normalizedInput.includes(entryName)) {
+    return 200 + entryName.length + (entry.active ? 100 : 0);
+  }
+
+  const aliasMatch = aliases.reduce((best, alias) => {
+    if (alias && normalizedInput.includes(alias)) {
+      return Math.max(best, alias.length);
+    }
+    return best;
+  }, 0);
+
+  if (aliasMatch > 0) {
+    return 100 + aliasMatch + (entry.active ? 100 : 0);
+  }
+
+  return 0;
+}
+
+async function findRegistryEntry(env, inputText) {
+  const rawId = env.REGISTRY_DATABASE_ID || DEFAULT_REGISTRY_DATABASE_ID;
+  const databaseId = formatNotionId(rawId);
+
+  console.log("REGISTRY DATABASE ID RAW:", rawId);
+  console.log("REGISTRY DATABASE ID FORMATTED:", databaseId);
+
+  const res = await fetch(
+    `https://api.notion.com/v1/databases/${databaseId}/query`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.NOTION_TOKEN}`,
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    }
+  );
+
+  const body = await res.text();
+
+  console.log("REGISTRY QUERY STATUS:", res.status);
+  console.log("REGISTRY QUERY BODY:", body.slice(0, 500));
+
+  if (!res.ok) {
+    throw new Error(`Registry query ${res.status}: ${body}`);
+  }
+
+  const data = JSON.parse(body);
+  const results = Array.isArray(data.results) ? data.results : [];
+
+  let bestEntry = null;
+  let bestScore = 0;
+
+  for (let i = 0; i < results.length; i++) {
+    const entry = buildRegistryEntryFromPage(results[i]);
+    const score = scoreRegistryMatch(entry, inputText);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestEntry = entry;
+    }
+  }
+
+  return bestScore > 0 ? bestEntry : null;
+}
+
+function buildParsedFromRegistry(inputText, registryEntry) {
+  if (!registryEntry) {
+    return null;
+  }
+
+  const portionMatch = String(inputText || "").match(/portion\s+(\d+(?:[.,]\d+)?)/i);
+  const requestedPortion = portionMatch
+    ? parseFloat(portionMatch[1].replace(",", "."))
+    : 1;
+
+  if (typeof registryEntry.mgProPortion === "number") {
+    return {
+      name: registryEntry.name,
+      amount: registryEntry.mgProPortion * requestedPortion,
+      unit: "mg",
+      requestedPortion,
+      registryEntry
+    };
+  }
+
+  if (
+    typeof registryEntry.mgProKapsel === "number" &&
+    typeof registryEntry.kapselnProPortion === "number"
+  ) {
+    return {
+      name: registryEntry.name,
+      amount: registryEntry.mgProKapsel * registryEntry.kapselnProPortion * requestedPortion,
+      unit: "mg",
+      requestedPortion,
+      registryEntry
+    };
+  }
+
+  if (typeof registryEntry.standardPortion === "number" && registryEntry.portionEinheit) {
+    return {
+      name: registryEntry.name,
+      amount: registryEntry.standardPortion * requestedPortion,
+      unit: registryEntry.portionEinheit,
+      requestedPortion,
+      registryEntry
+    };
   }
 
   return null;

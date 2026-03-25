@@ -68,6 +68,21 @@ export default {
 
     const chatId = message.chat.id;
     const text = message.text.trim();
+
+    if (text === "/start") {
+      await sendTelegramMessage(
+        env,
+        chatId,
+`Willkommen bei SuppPowerBot
+
+Sende Supplements im Format:
+Magnesium 400 mg
+Iron 20 mg
+Curcumin 500 mg`
+      );
+      return new Response("OK");
+    }
+
     const parsed = parseSupplementInput(text);
 
     if (!parsed) {

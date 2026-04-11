@@ -1,0 +1,20 @@
+{
+  "context": {
+    "phase": "AMPK",
+    "dayType": "rest",
+    "week": "B"
+  },
+  "plan": {
+    "portion_1": ["NMN", "CaAKG", "Rhodiola", "Cordyceps"],
+    "portion_2": ["Vitamin D3", "Vitamin K2", "Quercetin", "Granatapfel", "Maqui"],
+    "portion_2b": ["Magnesium L-Threonat", "Uridin-Monophosphat", "CDP-Cholin", "CoQ10"],
+    "portion_2c": ["Kreatin", "L-Arginin", "EAAs"],
+    "portion_3": ["Pleurotus", "Okra", "Chaga", "EGCG", "Curcumin"],
+    "portion_4": ["OPC", "Keratin", "Silizium"],
+    "portion_4b": ["Eisen", "Vitamin C"],
+    "portion_5": ["Ashwagandha", "Brahmi"],
+    "portion_6": ["Nattokinase", "Flavozym"],
+    "portion_7": ["Magnesium", "Glycin", "Theanin", "Tryptophan"],
+    "portion_8": ["Zink", "Kupfer"]
+  }
+}

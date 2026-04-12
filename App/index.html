@@ -48,9 +48,6 @@
     z-index: 0;
     transition: background 0.6s ease;
   }
-  body.accent-update::before {
-    background: radial-gradient(circle, var(--accent-glow-bg, rgba(74,222,128,0.04)) 0%, transparent 70%);
-  }
 
   .app {
     max-width: 430px;
@@ -60,7 +57,6 @@
     z-index: 1;
   }
 
-  /* ── TOP BAR ── */
   .topbar {
     display: flex;
     align-items: center;
@@ -115,7 +111,6 @@
   .icon-btn:active { background: var(--surface-hover); }
   .icon-btn svg { width: 16px; height: 16px; stroke: var(--text-secondary); fill: none; stroke-width: 1.5; }
 
-  /* ── PROGRESS BAR ── */
   .progress-section {
     padding: 4px 20px 20px;
   }
@@ -154,7 +149,6 @@
     box-shadow: 0 0 8px var(--accent-glow);
   }
 
-  /* ── PORTION TABS ── */
   .portion-tabs-wrap {
     padding: 0 0 4px;
     overflow: hidden;
@@ -214,7 +208,6 @@
   }
   .portion-tab.all-done .portion-tab-done-dot { opacity: 1; }
 
-  /* ── HERO CARD ── */
   .hero-section { padding: 4px 20px 16px; }
   .hero-card {
     border-radius: var(--radius-xl);
@@ -311,7 +304,6 @@
     background: var(--border);
   }
 
-  /* ── SUPPLEMENT CARDS ── */
   .supplements-section {
     padding: 0 20px;
   }
@@ -482,7 +474,6 @@
   .examine-link:hover { background: rgba(255,255,255,0.08); border-color: var(--border-strong); }
   .examine-link svg { width: 12px; height: 12px; stroke: var(--text-muted); fill: none; stroke-width: 1.5; }
 
-  /* ── BOTTOM ACTIONS ── */
   .bottom-bar {
     position: fixed;
     bottom: 0; left: 50%;
@@ -520,7 +511,6 @@
   }
   .action-btn.primary:active { transform: scale(0.97); }
 
-  /* ── DETAIL SHEET ── */
   .sheet-overlay {
     position: fixed;
     inset: 0;
@@ -610,7 +600,6 @@
   }
   .sheet-examine-btn:active { background: var(--surface-hover); }
 
-  /* ── TOAST ── */
   .toast {
     position: fixed;
     top: 70px;
@@ -732,10 +721,10 @@ const portions = [
     subtitle: "Morgens nüchtern",
     color: "#4ade80",
     supplements: [
-      { id: "nmn",  name: "NMN",       description: "Zelluläre Energie & NAD+",     focus: "NAD",    evidence: "★★☆", examineSlug: "nicotinamide-mononucleotide" },
-      { id: "nac",  name: "NAC",       description: "Glutathion & Detox",            focus: "Detox",  evidence: "★★★", examineSlug: "n-acetylcysteine" },
-      { id: "ber",  name: "Berberine", description: "AMPK Aktivator & Metabolismus", focus: "AMPK",   evidence: "★★★", examineSlug: "berberine" },
-      { id: "res",  name: "Resveratrol",description: "Sirtuine & Zellschutz",        focus: "AMPK",   evidence: "★★☆", examineSlug: "resveratrol" },
+      { id: "nmn",  name: "NMN",        description: "Zelluläre Energie & NAD+",             focus: "NAD",     evidence: "★★☆", examineSlug: "nicotinamide-mononucleotide" },
+      { id: "nac",  name: "NAC",        description: "Glutathion & Detox",                   focus: "Detox",   evidence: "★★★", examineSlug: "n-acetylcysteine" },
+      { id: "ber",  name: "Berberine",  description: "AMPK Aktivator & Metabolismus",        focus: "AMPK",    evidence: "★★★", examineSlug: "berberine" },
+      { id: "res",  name: "Resveratrol",description: "Sirtuine & Zellschutz",                focus: "AMPK",    evidence: "★★☆", examineSlug: "resveratrol" }
     ]
   },
   {
@@ -745,11 +734,11 @@ const portions = [
     subtitle: "Frühstück",
     color: "#60a5fa",
     supplements: [
-      { id: "vd3", name: "Vitamin D3",  description: "Immunsystem & Knochendichte",  focus: "Immune", evidence: "★★★", examineSlug: "vitamin-d" },
-      { id: "vk2", name: "Vitamin K2",  description: "Kalziumtransport & Arterien",  focus: "Cardio", evidence: "★★☆", examineSlug: "vitamin-k2" },
-      { id: "mg",  name: "Magnesium",   description: "300+ Enzymprozesse",           focus: "neutral",evidence: "★★★", examineSlug: "magnesium" },
-      { id: "zn",  name: "Zink",        description: "Immunfunktion & Testosteron",  focus: "Immune", evidence: "★★★", examineSlug: "zinc" },
-      { id: "om3", name: "Omega-3",     description: "Entzündungshemmung & Gehirn",  focus: "neutral",evidence: "★★★", examineSlug: "fish-oil" },
+      { id: "vd3", name: "Vitamin D3", description: "Immunsystem & Knochendichte",           focus: "Immune",  evidence: "★★★", examineSlug: "vitamin-d" },
+      { id: "vk2", name: "Vitamin K2", description: "Kalziumtransport & Arterien",           focus: "Cardio",  evidence: "★★☆", examineSlug: "vitamin-k2" },
+      { id: "mg",  name: "Magnesium",  description: "300+ Enzymprozesse",                    focus: "neutral", evidence: "★★★", examineSlug: "magnesium" },
+      { id: "zn",  name: "Zink",       description: "Immunfunktion & Testosteron",           focus: "Immune",  evidence: "★★★", examineSlug: "zinc" },
+      { id: "om3", name: "Omega-3",    description: "Entzündungshemmung & Gehirn",           focus: "neutral", evidence: "★★★", examineSlug: "fish-oil" }
     ]
   },
   {
@@ -759,9 +748,9 @@ const portions = [
     subtitle: "Pre-Workout",
     color: "#f97316",
     supplements: [
-      { id: "cre", name: "Creatin",     description: "ATP & muskuläre Kraft",        focus: "mTOR",   evidence: "★★★", examineSlug: "creatine" },
-      { id: "leu", name: "Leucin",      description: "mTOR-Trigger & Proteinsynthese",focus: "mTOR",  evidence: "★★★", examineSlug: "leucine" },
-      { id: "caf", name: "Koffein",     description: "Fokus & Performance",          focus: "AMPK",   evidence: "★★★", examineSlug: "caffeine" },
+      { id: "cre", name: "Creatin", description: "ATP & muskuläre Kraft",                    focus: "mTOR",    evidence: "★★★", examineSlug: "creatine" },
+      { id: "leu", name: "Leucin",  description: "mTOR-Trigger & Proteinsynthese",           focus: "mTOR",    evidence: "★★★", examineSlug: "leucine" },
+      { id: "caf", name: "Koffein", description: "Fokus & Performance",                      focus: "AMPK",    evidence: "★★★", examineSlug: "caffeine" }
     ]
   },
   {
@@ -771,9 +760,9 @@ const portions = [
     subtitle: "Post-Workout",
     color: "#c084fc",
     supplements: [
-      { id: "ash", name: "Ashwagandha", description: "Cortisol & Stressadaptation",  focus: "Stress", evidence: "★★★", examineSlug: "ashwagandha" },
-      { id: "rho", name: "Rhodiola",    description: "Fatigue & mentale Resilienz",  focus: "Stress", evidence: "★★☆", examineSlug: "rhodiola-rosea" },
-      { id: "cit", name: "L-Citrullin", description: "NO-Produktion & Durchblutung", focus: "Cardio", evidence: "★★★", examineSlug: "citrulline" },
+      { id: "ash", name: "Ashwagandha", description: "Cortisol & Stressadaptation",          focus: "Stress",  evidence: "★★★", examineSlug: "ashwagandha" },
+      { id: "rho", name: "Rhodiola",    description: "Fatigue & mentale Resilienz",          focus: "Stress",  evidence: "★★☆", examineSlug: "rhodiola-rosea" },
+      { id: "cit", name: "L-Citrullin", description: "NO-Produktion & Durchblutung",         focus: "Cardio",  evidence: "★★★", examineSlug: "citrulline" }
     ]
   },
   {
@@ -783,9 +772,9 @@ const portions = [
     subtitle: "Zu Mittag",
     color: "#f59e0b",
     supplements: [
-      { id: "q10", name: "CoQ10",       description: "Mitochondriale Energie",       focus: "AMPK",   evidence: "★★★", examineSlug: "coenzyme-q10" },
-      { id: "ala", name: "Alpha-Liponsäure", description: "Antioxidans & Insulinsensitivität", focus: "AMPK", evidence: "★★★", examineSlug: "alpha-lipoic-acid" },
-      { id: "pip", name: "Piperin",     description: "Bioverfügbarkeit +20–2000%",   focus: "neutral",evidence: "★★★", examineSlug: "piperine" },
+      { id: "q10", name: "CoQ10",             description: "Mitochondriale Energie",         focus: "AMPK",    evidence: "★★★", examineSlug: "coenzyme-q10" },
+      { id: "ala", name: "Alpha-Liponsäure",  description: "Antioxidans & Insulinsensitivität", focus: "AMPK", evidence: "★★★", examineSlug: "alpha-lipoic-acid" },
+      { id: "pip", name: "Piperin",           description: "Bioverfügbarkeit +20–2000%",     focus: "neutral", evidence: "★★★", examineSlug: "piperine" }
     ]
   },
   {
@@ -795,9 +784,9 @@ const portions = [
     subtitle: "Nachmittags",
     color: "#22d3ee",
     supplements: [
-      { id: "lion","name": "Lion's Mane","description": "NGF & neuronale Plastizität",focus: "neutral",evidence: "★★☆", examineSlug: "lions-mane-mushroom" },
-      { id: "bac", name: "Bacopa",       description: "Gedächtnis & Acetylcholin",   focus: "neutral",evidence: "★★★", examineSlug: "bacopa-monnieri" },
-      { id: "gin", name: "Ginkgo",       description: "Durchblutung & Kognition",    focus: "Cardio", evidence: "★★☆", examineSlug: "ginkgo-biloba" },
+      { id: "lion", name: "Lion's Mane", description: "NGF & neuronale Plastizität",         focus: "neutral", evidence: "★★☆", examineSlug: "lions-mane-mushroom" },
+      { id: "bac",  name: "Bacopa",      description: "Gedächtnis & Acetylcholin",           focus: "neutral", evidence: "★★★", examineSlug: "bacopa-monnieri" },
+      { id: "gin",  name: "Ginkgo",      description: "Durchblutung & Kognition",            focus: "Cardio",  evidence: "★★☆", examineSlug: "ginkgo-biloba" }
     ]
   },
   {
@@ -807,8 +796,8 @@ const portions = [
     subtitle: "Zu Abend",
     color: "#fb7185",
     supplements: [
-      { id: "cur", name: "Curcumin",     description: "Entzündungshemmung & NF-κB",  focus: "neutral",evidence: "★★★", examineSlug: "curcumin" },
-      { id: "que", name: "Quercetin",    description: "Senolytikum & Antioxidans",   focus: "AMPK",   evidence: "★★☆", examineSlug: "quercetin" },
+      { id: "cur", name: "Curcumin",  description: "Entzündungshemmung & NF-κB",             focus: "neutral", evidence: "★★★", examineSlug: "curcumin" },
+      { id: "que", name: "Quercetin", description: "Senolytikum & Antioxidans",              focus: "AMPK",    evidence: "★★☆", examineSlug: "quercetin" }
     ]
   },
   {
@@ -818,18 +807,54 @@ const portions = [
     subtitle: "Vor dem Schlafen",
     color: "#818cf8",
     supplements: [
-      { id: "mel", name: "Melatonin",    description: "Schlafeinleitung & Antioxidans", focus: "Sleep", evidence: "★★★", examineSlug: "melatonin" },
-      { id: "gli", name: "Glycin",       description: "Schlafqualität & Kollagen",   focus: "Sleep",  evidence: "★★★", examineSlug: "glycine" },
-      { id: "l-t", name: "L-Theanin",   description: "Entspannung ohne Sedierung",  focus: "Stress", evidence: "★★★", examineSlug: "theanine" },
-      { id: "app", name: "Apigenin",     description: "Anxiolytikum & Schlaftiefe",  focus: "Sleep",  evidence: "★★☆", examineSlug: "apigenin" },
+      { id: "mel", name: "Melatonin",  description: "Schlafeinleitung & Antioxidans",        focus: "Sleep",   evidence: "★★★", examineSlug: "melatonin" },
+      { id: "gli", name: "Glycin",     description: "Schlafqualität & Kollagen",             focus: "Sleep",   evidence: "★★★", examineSlug: "glycine" },
+      { id: "l-t", name: "L-Theanin",  description: "Entspannung ohne Sedierung",            focus: "Stress",  evidence: "★★★", examineSlug: "theanine" },
+      { id: "app", name: "Apigenin",   description: "Anxiolytikum & Schlaftiefe",            focus: "Sleep",   evidence: "★★☆", examineSlug: "apigenin" }
     ]
   }
 ];
 
+const STORAGE_KEY = 'supppower_state_v1';
+
 let activePortionIdx = 0;
 let sheetSupplement = null;
 const state = {};
-portions.forEach(p => p.supplements.forEach(s => { state[s.id] = s.status || 'open'; }));
+
+function saveAppState() {
+  const payload = {
+    activePortionIdx,
+    state
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
+
+function loadAppState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+
+  try {
+    const parsed = JSON.parse(raw);
+
+    if (typeof parsed.activePortionIdx === 'number' && parsed.activePortionIdx >= 0 && parsed.activePortionIdx < portions.length) {
+      activePortionIdx = parsed.activePortionIdx;
+    }
+
+    if (parsed.state && typeof parsed.state === 'object') {
+      Object.keys(parsed.state).forEach(key => {
+        state[key] = parsed.state[key];
+      });
+    }
+  } catch (err) {
+    console.error('Fehler beim Laden aus localStorage:', err);
+  }
+}
+
+portions.forEach(p => p.supplements.forEach(s => {
+  state[s.id] = 'open';
+}));
+
+loadAppState();
 
 function getAccentVars(color) {
   const hex = color.replace('#','');
@@ -840,7 +865,7 @@ function getAccentVars(color) {
     accent: color,
     glow: `rgba(${r},${g},${b},0.18)`,
     glass: `rgba(${r},${g},${b},0.08)`,
-    faint: `rgba(${r},${g},${b},0.2)`,
+    faint: `rgba(${r},${g},${b},0.2)`
   };
 }
 
@@ -857,7 +882,10 @@ function applyAccent(color) {
 
 function getProgress() {
   let done = 0, total = 0;
-  portions.forEach(p => p.supplements.forEach(s => { total++; if(state[s.id]==='done') done++; }));
+  portions.forEach(p => p.supplements.forEach(s => {
+    total++;
+    if (state[s.id] === 'done') done++;
+  }));
   return { done, total };
 }
 
@@ -865,7 +893,7 @@ function renderProgress() {
   const { done, total } = getProgress();
   document.getElementById('doneCount').textContent = done;
   document.getElementById('totalCount').textContent = ` / ${total}`;
-  const pct = total ? (done/total*100) : 0;
+  const pct = total ? (done / total * 100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
 }
 
@@ -884,7 +912,7 @@ function renderTabs() {
 
 function renderHero() {
   const p = portions[activePortionIdx];
-  const doneCount = p.supplements.filter(s => state[s.id]==='done').length;
+  const doneCount = p.supplements.filter(s => state[s.id] === 'done').length;
   const openCount = p.supplements.length - doneCount;
   document.getElementById('heroLabel').textContent = p.title.toUpperCase();
   document.getElementById('heroTitle').textContent = p.meta;
@@ -903,6 +931,7 @@ function renderSupplements() {
   const p = portions[activePortionIdx];
   const container = document.getElementById('supplementList');
   container.innerHTML = '';
+
   p.supplements.forEach(s => {
     const isDone = state[s.id] === 'done';
     const div = document.createElement('div');
@@ -931,11 +960,14 @@ function renderSupplements() {
         </div>
       </div>`;
     div.onclick = (e) => {
-      if(e.target.closest('.examine-link')) return;
+      if (e.target.closest('.examine-link')) return;
       toggleSupplement(s.id, div);
     };
-    div.addEventListener('contextmenu', (e) => { e.preventDefault(); openSheet(s); });
-    div.addEventListener('touchstart', () => {}, {passive: true});
+    div.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      openSheet(s);
+    });
+    div.addEventListener('touchstart', () => {}, { passive: true });
     container.appendChild(div);
   });
 }
@@ -945,7 +977,12 @@ function toggleSupplement(id, el) {
   el.classList.toggle('done', state[id] === 'done');
   el.classList.add('flashing');
   setTimeout(() => el.classList.remove('flashing'), 300);
-  if(state[id] === 'done') showToast('✓ ' + portions[activePortionIdx].supplements.find(s=>s.id===id).name);
+
+  if (state[id] === 'done') {
+    showToast('✓ ' + portions[activePortionIdx].supplements.find(s => s.id === id).name);
+  }
+
+  saveAppState();
   renderProgress();
   renderHero();
   renderTabs();
@@ -953,17 +990,23 @@ function toggleSupplement(id, el) {
 
 function selectPortion(idx) {
   activePortionIdx = idx;
+  saveAppState();
   applyAccent(portions[idx].color);
   renderTabs();
   renderHero();
   renderSupplements();
   const tab = document.querySelectorAll('.portion-tab')[idx];
-  if(tab) tab.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  if (tab) {
+    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
 }
 
 function resetPortion() {
   const p = portions[activePortionIdx];
-  p.supplements.forEach(s => { state[s.id] = 'open'; });
+  p.supplements.forEach(s => {
+    state[s.id] = 'open';
+  });
+  saveAppState();
   renderProgress();
   renderHero();
   renderSupplements();
@@ -974,8 +1017,13 @@ function resetPortion() {
 function markAllDone() {
   const p = portions[activePortionIdx];
   const allDone = p.supplements.every(s => state[s.id] === 'done');
-  if(allDone) return;
-  p.supplements.forEach(s => { state[s.id] = 'done'; });
+  if (allDone) return;
+
+  p.supplements.forEach(s => {
+    state[s.id] = 'done';
+  });
+
+  saveAppState();
   renderProgress();
   renderHero();
   renderSupplements();
@@ -1004,7 +1052,7 @@ function closeSheet() {
 
 function showSummary() {
   const lines = portions.map(p => {
-    const done = p.supplements.filter(s => state[s.id]==='done').length;
+    const done = p.supplements.filter(s => state[s.id] === 'done').length;
     return `${p.title}: ${done}/${p.supplements.length}`;
   }).join('\n');
   alert('── TAGES-SUMMARY ──\n\n' + lines);
@@ -1019,8 +1067,7 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-// Init
-applyAccent(portions[0].color);
+applyAccent(portions[activePortionIdx].color);
 renderProgress();
 renderTabs();
 renderHero();

@@ -772,9 +772,9 @@ const portions = [
     subtitle: "Zu Mittag",
     color: "#f59e0b",
     supplements: [
-      { id: "q10", name: "CoQ10",             description: "Mitochondriale Energie",         focus: "AMPK",    evidence: "★★★", examineSlug: "coenzyme-q10" },
-      { id: "ala", name: "Alpha-Liponsäure",  description: "Antioxidans & Insulinsensitivität", focus: "AMPK", evidence: "★★★", examineSlug: "alpha-lipoic-acid" },
-      { id: "pip", name: "Piperin",           description: "Bioverfügbarkeit +20–2000%",     focus: "neutral", evidence: "★★★", examineSlug: "piperine" }
+      { id: "q10", name: "CoQ10",             description: "Mitochondriale Energie",            focus: "AMPK",    evidence: "★★★", examineSlug: "coenzyme-q10" },
+      { id: "ala", name: "Alpha-Liponsäure",  description: "Antioxidans & Insulinsensitivität", focus: "AMPK",    evidence: "★★★", examineSlug: "alpha-lipoic-acid" },
+      { id: "pip", name: "Piperin",           description: "Bioverfügbarkeit +20–2000%",        focus: "neutral", evidence: "★★★", examineSlug: "piperine" }
     ]
   },
   {
@@ -815,14 +815,39 @@ const portions = [
   }
 ];
 
-const STORAGE_KEY = 'supppower_state_v1';
-
+const STORAGE_KEY = 'supppower_state_v2';
+const state = {};
 let activePortionIdx = 0;
 let sheetSupplement = null;
-const state = {};
+let didAutoResetToday = false;
+
+function getTodayString() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getEmptyState() {
+  const fresh = {};
+  portions.forEach(p => p.supplements.forEach(s => {
+    fresh[s.id] = 'open';
+  }));
+  return fresh;
+}
+
+function applyEmptyState() {
+  const fresh = getEmptyState();
+  Object.keys(state).forEach(key => delete state[key]);
+  Object.keys(fresh).forEach(key => {
+    state[key] = fresh[key];
+  });
+}
 
 function saveAppState() {
   const payload = {
+    dayStamp: getTodayString(),
     activePortionIdx,
     state
   };
@@ -830,31 +855,64 @@ function saveAppState() {
 }
 
 function loadAppState() {
+  applyEmptyState();
+
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return;
+  if (!raw) {
+    saveAppState();
+    return;
+  }
 
   try {
     const parsed = JSON.parse(raw);
+    const today = getTodayString();
 
-    if (typeof parsed.activePortionIdx === 'number' && parsed.activePortionIdx >= 0 && parsed.activePortionIdx < portions.length) {
+    if (!parsed || typeof parsed !== 'object') {
+      saveAppState();
+      return;
+    }
+
+    if (parsed.dayStamp !== today) {
+      didAutoResetToday = true;
+      activePortionIdx = 0;
+      saveAppState();
+      return;
+    }
+
+    if (
+      typeof parsed.activePortionIdx === 'number' &&
+      parsed.activePortionIdx >= 0 &&
+      parsed.activePortionIdx < portions.length
+    ) {
       activePortionIdx = parsed.activePortionIdx;
     }
 
     if (parsed.state && typeof parsed.state === 'object') {
       Object.keys(parsed.state).forEach(key => {
-        state[key] = parsed.state[key];
+        if (key in state && (parsed.state[key] === 'open' || parsed.state[key] === 'done')) {
+          state[key] = parsed.state[key];
+        }
       });
     }
   } catch (err) {
     console.error('Fehler beim Laden aus localStorage:', err);
+    applyEmptyState();
+    activePortionIdx = 0;
+    saveAppState();
   }
 }
 
-portions.forEach(p => p.supplements.forEach(s => {
-  state[s.id] = 'open';
-}));
-
-loadAppState();
+function resetWholeDay() {
+  applyEmptyState();
+  activePortionIdx = 0;
+  saveAppState();
+  applyAccent(portions[activePortionIdx].color);
+  renderProgress();
+  renderTabs();
+  renderHero();
+  renderSupplements();
+  showToast('↺ Neuer Tag gestartet');
+}
 
 function getAccentVars(color) {
   const hex = color.replace('#','');
@@ -881,7 +939,8 @@ function applyAccent(color) {
 }
 
 function getProgress() {
-  let done = 0, total = 0;
+  let done = 0;
+  let total = 0;
   portions.forEach(p => p.supplements.forEach(s => {
     total++;
     if (state[s.id] === 'done') done++;
@@ -900,6 +959,7 @@ function renderProgress() {
 function renderTabs() {
   const container = document.getElementById('portionTabs');
   container.innerHTML = '';
+
   portions.forEach((p, idx) => {
     const allDone = p.supplements.every(s => state[s.id] === 'done');
     const div = document.createElement('div');
@@ -922,6 +982,7 @@ function renderHero() {
   document.getElementById('heroDone').textContent = doneCount;
   document.getElementById('heroOpen').textContent = openCount;
   document.getElementById('suppSectionLabel').textContent = `SUPPLEMENTS · ${openCount} OFFEN`;
+
   const allDone = openCount === 0;
   document.getElementById('markAllBtn').textContent = allDone ? '✓ Alle erledigt' : 'Alle erledigt →';
   document.getElementById('markAllBtn').style.opacity = allDone ? '0.5' : '1';
@@ -937,6 +998,7 @@ function renderSupplements() {
     const div = document.createElement('div');
     div.className = 'supplement-card' + (isDone ? ' done' : '');
     div.dataset.id = s.id;
+
     div.innerHTML = `
       <div class="supplement-card-tap-flash"></div>
       <div class="supp-row">
@@ -958,16 +1020,21 @@ function renderSupplements() {
             <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
         </div>
-      </div>`;
+      </div>
+    `;
+
     div.onclick = (e) => {
       if (e.target.closest('.examine-link')) return;
       toggleSupplement(s.id, div);
     };
+
     div.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       openSheet(s);
     });
+
     div.addEventListener('touchstart', () => {}, { passive: true });
+
     container.appendChild(div);
   });
 }
@@ -995,6 +1062,7 @@ function selectPortion(idx) {
   renderTabs();
   renderHero();
   renderSupplements();
+
   const tab = document.querySelectorAll('.portion-tab')[idx];
   if (tab) {
     tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -1006,6 +1074,7 @@ function resetPortion() {
   p.supplements.forEach(s => {
     state[s.id] = 'open';
   });
+
   saveAppState();
   renderProgress();
   renderHero();
@@ -1051,11 +1120,16 @@ function closeSheet() {
 }
 
 function showSummary() {
+  const { done, total } = getProgress();
+  const pct = total ? Math.round((done / total) * 100) : 0;
   const lines = portions.map(p => {
-    const done = p.supplements.filter(s => state[s.id] === 'done').length;
-    return `${p.title}: ${done}/${p.supplements.length}`;
+    const portionDone = p.supplements.filter(s => state[s.id] === 'done').length;
+    return `${p.title}: ${portionDone}/${p.supplements.length}`;
   }).join('\n');
-  alert('── TAGES-SUMMARY ──\n\n' + lines);
+
+  alert(
+    `── TAGES-SUMMARY ──\n\nDatum: ${getTodayString()}\nCompliance: ${pct}%\nGesamt: ${done}/${total}\n\n${lines}\n\nTipp: Für kompletten Neustart im Browser-Kontext kannst du resetWholeDay() in der Konsole ausführen.`
+  );
 }
 
 let toastTimer;
@@ -1067,11 +1141,16 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+loadAppState();
 applyAccent(portions[activePortionIdx].color);
 renderProgress();
 renderTabs();
 renderHero();
 renderSupplements();
+
+if (didAutoResetToday) {
+  showToast('☀️ Neuer Tag, frischer Start');
+}
 </script>
 </body>
 </html>

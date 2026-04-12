@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SuppPower OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c10;
+    --surface: rgba(255,255,255,0.04);
+    --surface-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.15);
+    --text-primary: #f0f4f8;
+    --text-secondary: rgba(240,244,248,0.5);
+    --text-muted: rgba(240,244,248,0.3);
+    --accent: #4ade80;
+    --accent-glow: rgba(74,222,128,0.15);
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -30%;
+    left: -20%;
+    width: 80vw;
+    height: 80vw;
+    background: radial-gradient(circle, rgba(74,222,128,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    transition: background 0.6s ease;
+  }
+  body.accent-update::before {
+    background: radial-gradient(circle, var(--accent-glow-bg, rgba(74,222,128,0.04)) 0%, transparent 70%);
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 0 0 120px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 56px 20px 16px;
+  }
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 0 20px var(--accent-glow);
+    transition: background 0.4s ease, box-shadow 0.4s ease;
+  }
+  .logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-primary);
+  }
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    font-family: var(--font-mono);
+  }
+  .topbar-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .icon-btn:active { background: var(--surface-hover); }
+  .icon-btn svg { width: 16px; height: 16px; stroke: var(--text-secondary); fill: none; stroke-width: 1.5; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-section {
+    padding: 4px 20px 20px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .progress-label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .progress-count {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    transition: color 0.4s ease;
+    font-family: var(--font-mono);
+  }
+  .progress-total { color: var(--text-muted); font-size: 14px; font-weight: 400; }
+  .progress-track {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.4s ease;
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+
+  /* ── PORTION TABS ── */
+  .portion-tabs-wrap {
+    padding: 0 0 4px;
+    overflow: hidden;
+  }
+  .portion-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 20px 12px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-snap-type: x mandatory;
+  }
+  .portion-tabs::-webkit-scrollbar { display: none; }
+  .portion-tab {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+  }
+  .portion-tab-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+  .portion-tab-meta {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .portion-tab.active {
+    background: var(--accent-glass);
+    border-color: var(--accent);
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
+  .portion-tab.active .portion-tab-title {
+    color: var(--accent);
+  }
+  .portion-tab-done-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    margin-left: 5px;
+    vertical-align: middle;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .portion-tab.all-done .portion-tab-done-dot { opacity: 1; }
+
+  /* ── HERO CARD ── */
+  .hero-section { padding: 4px 20px 16px; }
+  .hero-card {
+    border-radius: var(--radius-xl);
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.4s ease;
+  }
+  .hero-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+    transition: background 0.4s ease;
+  }
+  .hero-card::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .hero-portion-label {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .hero-title {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text-primary);
+  }
+  .hero-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    font-family: var(--font-mono);
+  }
+  .hero-accent-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: var(--accent-glass);
+    border: 0.5px solid var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    transition: all 0.4s ease;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 0.5px solid var(--border);
+  }
+  .hero-stat {
+    flex: 1;
+    text-align: center;
+  }
+  .hero-stat-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    transition: color 0.4s ease;
+  }
+  .hero-stat-lbl {
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+  }
+  .hero-stat-divider {
+    width: 0.5px;
+    background: var(--border);
+  }
+
+  /* ── SUPPLEMENT CARDS ── */
+  .supplements-section {
+    padding: 0 20px;
+  }
+  .section-header {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-left: 2px;
+  }
+  .supplement-card {
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    padding: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .supplement-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 2px 0 0 2px;
+    opacity: 0;
+    transition: opacity 0.3s ease, background 0.4s ease;
+  }
+  .supplement-card.done::before { opacity: 1; }
+  .supplement-card.done {
+    background: rgba(255,255,255,0.02);
+    border-color: rgba(255,255,255,0.05);
+  }
+  .supplement-card.done .supp-name {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+  .supplement-card.done .supp-desc {
+    opacity: 0.4;
+  }
+  .supplement-card:active {
+    transform: scale(0.98);
+    background: var(--surface-hover);
+  }
+  .supplement-card-tap-flash {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  .supplement-card.flashing .supplement-card-tap-flash { opacity: 0.06; }
+
+  .supp-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .supp-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-strong);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .supplement-card.done .supp-check {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+  .check-icon {
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .supplement-card.done .check-icon {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .supp-body { flex: 1; min-width: 0; }
+  .supp-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    transition: color 0.3s, text-decoration 0.1s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .supp-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+    line-height: 1.4;
+    transition: opacity 0.3s;
+  }
+  .supp-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    border: 0.5px solid;
+    transition: all 0.4s ease;
+  }
+  .badge-focus-AMPK   { color: #4ade80; border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.08); }
+  .badge-focus-mTOR   { color: #60a5fa; border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.08); }
+  .badge-focus-neutral{ color: #94a3b8; border-color: rgba(148,163,184,0.25); background: rgba(148,163,184,0.06); }
+  .badge-focus-NAD    { color: #f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
+  .badge-focus-Detox  { color: #c084fc; border-color: rgba(192,132,252,0.3); background: rgba(192,132,252,0.08); }
+  .badge-focus-Stress { color: #f472b6; border-color: rgba(244,114,182,0.3); background: rgba(244,114,182,0.08); }
+  .badge-focus-Cardio { color: #f97316; border-color: rgba(249,115,22,0.3); background: rgba(249,115,22,0.08); }
+  .badge-focus-Sleep  { color: #818cf8; border-color: rgba(129,140,248,0.3); background: rgba(129,140,248,0.08); }
+  .badge-focus-Immune { color: #34d399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.08); }
+
+  .badge-evidence {
+    color: var(--accent);
+    border-color: var(--accent-faint, rgba(74,222,128,0.2));
+    background: rgba(255,255,255,0.03);
+    font-size: 11px;
+    transition: color 0.4s, border-color 0.4s;
+  }
+  .supplement-card.done .badge-evidence {
+    color: var(--text-muted);
+    border-color: transparent;
+  }
+
+  .supp-examine {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .examine-link {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .examine-link:hover { background: rgba(255,255,255,0.08); border-color: var(--border-strong); }
+  .examine-link svg { width: 12px; height: 12px; stroke: var(--text-muted); fill: none; stroke-width: 1.5; }
+
+  /* ── BOTTOM ACTIONS ── */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg) 60%, transparent);
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+  }
+  .action-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .action-btn:active { transform: scale(0.97); background: var(--surface-hover); }
+  .action-btn.primary {
+    background: var(--accent-glass);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+    transition: all 0.4s ease;
+  }
+  .action-btn.primary:active { transform: scale(0.97); }
+
+  /* ── DETAIL SHEET ── */
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .sheet-overlay.open { opacity: 1; pointer-events: all; }
+  .sheet {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    width: 100%;
+    max-width: 430px;
+    background: #0d1117;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-top: 0.5px solid var(--border-strong);
+    padding: 0 20px calc(40px + env(safe-area-inset-bottom));
+    z-index: 201;
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .sheet.open { transform: translateX(-50%) translateY(0); }
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.15);
+    margin: 14px auto 20px;
+  }
+  .sheet-name {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .sheet-focus {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    letter-spacing: 0.08em;
+  }
+  .sheet-desc {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .sheet-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .sheet-row:last-child { border-bottom: none; }
+  .sheet-row-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+  }
+  .sheet-row-val {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .sheet-examine-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 0.5px solid var(--border-strong);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    margin-top: 24px;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .sheet-examine-btn:active { background: var(--surface-hover); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: rgba(15,20,27,0.95);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 300;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-icon" id="logoIcon">⚡</div>
+      <div>
+        <div class="logo-text">SUPPPOWER OS</div>
+        <div class="logo-sub">BIOHACKING CONSOLE</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="showSummary()" title="Summary">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-meta">
+      <span class="progress-label">Tages-Fortschritt</span>
+      <span><span class="progress-count" id="doneCount">0</span><span class="progress-total" id="totalCount"> / 0</span></span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="portion-tabs-wrap">
+    <div class="portion-tabs" id="portionTabs"></div>
+  </div>
+
+  <div class="hero-section">
+    <div class="hero-card" id="heroCard">
+      <div class="hero-top">
+        <div>
+          <div class="hero-portion-label" id="heroLabel">PORTION 1</div>
+          <div class="hero-title" id="heroTitle">—</div>
+          <div class="hero-subtitle" id="heroSubtitle">—</div>
+        </div>
+        <div class="hero-accent-pill" id="heroMeta">—</div>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-val" id="heroTotal">—</div>
+          <div class="hero-stat-lbl">Gesamt</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val" id="heroDone">—</div>
+          <div class="hero-stat-lbl">Erledigt</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val" id="heroOpen">—</div>
+          <div class="hero-stat-lbl">Offen</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="supplements-section">
+    <div class="section-header" id="suppSectionLabel">SUPPLEMENTS</div>
+    <div id="supplementList"></div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="action-btn" onclick="resetPortion()">Reset Portion</button>
+  <button class="action-btn primary" id="markAllBtn" onclick="markAllDone()">Alle erledigt →</button>
+</div>
+
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="detailSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-name" id="sheetName"></div>
+  <div class="sheet-focus" id="sheetFocus"></div>
+  <div class="sheet-desc" id="sheetDesc"></div>
+  <div class="sheet-row"><span class="sheet-row-label">EVIDENCE</span><span class="sheet-row-val" id="sheetEvidence"></span></div>
+  <div class="sheet-row"><span class="sheet-row-label">FOCUS</span><span class="sheet-row-val" id="sheetFocusVal"></span></div>
+  <div class="sheet-row"><span class="sheet-row-label">STATUS</span><span class="sheet-row-val" id="sheetStatus"></span></div>
+  <a class="sheet-examine-btn" id="sheetExamineLink" href="#" target="_blank">→ Examine.com öffnen</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const portions = [
+  {
+    id: "p1",
+    title: "Portion 1",
+    meta: "AMPK & Reset",
+    subtitle: "Morgens nüchtern",
+    color: "#4ade80",
+    supplements: [
+      { id: "nmn",  name: "NMN",       description: "Zelluläre Energie & NAD+",     focus: "NAD",    evidence: "★★☆", examineSlug: "nicotinamide-mononucleotide" },
+      { id: "nac",  name: "NAC",       description: "Glutathion & Detox",            focus: "Detox",  evidence: "★★★", examineSlug: "n-acetylcysteine" },
+      { id: "ber",  name: "Berberine", description: "AMPK Aktivator & Metabolismus", focus: "AMPK",   evidence: "★★★", examineSlug: "berberine" },
+      { id: "res",  name: "Resveratrol",description: "Sirtuine & Zellschutz",        focus: "AMPK",   evidence: "★★☆", examineSlug: "resveratrol" },
+    ]
+  },
+  {
+    id: "p2",
+    title: "Portion 2",
+    meta: "Basis & Mikronährstoffe",
+    subtitle: "Frühstück",
+    color: "#60a5fa",
+    supplements: [
+      { id: "vd3", name: "Vitamin D3",  description: "Immunsystem & Knochendichte",  focus: "Immune", evidence: "★★★", examineSlug: "vitamin-d" },
+      { id: "vk2", name: "Vitamin K2",  description: "Kalziumtransport & Arterien",  focus: "Cardio", evidence: "★★☆", examineSlug: "vitamin-k2" },
+      { id: "mg",  name: "Magnesium",   description: "300+ Enzymprozesse",           focus: "neutral",evidence: "★★★", examineSlug: "magnesium" },
+      { id: "zn",  name: "Zink",        description: "Immunfunktion & Testosteron",  focus: "Immune", evidence: "★★★", examineSlug: "zinc" },
+      { id: "om3", name: "Omega-3",     description: "Entzündungshemmung & Gehirn",  focus: "neutral",evidence: "★★★", examineSlug: "fish-oil" },
+    ]
+  },
+  {
+    id: "p3",
+    title: "Portion 3",
+    meta: "mTOR & Aufbau",
+    subtitle: "Pre-Workout",
+    color: "#f97316",
+    supplements: [
+      { id: "cre", name: "Creatin",     description: "ATP & muskuläre Kraft",        focus: "mTOR",   evidence: "★★★", examineSlug: "creatine" },
+      { id: "leu", name: "Leucin",      description: "mTOR-Trigger & Proteinsynthese",focus: "mTOR",  evidence: "★★★", examineSlug: "leucine" },
+      { id: "caf", name: "Koffein",     description: "Fokus & Performance",          focus: "AMPK",   evidence: "★★★", examineSlug: "caffeine" },
+    ]
+  },
+  {
+    id: "p4",
+    title: "Portion 4",
+    meta: "Recovery & Stress",
+    subtitle: "Post-Workout",
+    color: "#c084fc",
+    supplements: [
+      { id: "ash", name: "Ashwagandha", description: "Cortisol & Stressadaptation",  focus: "Stress", evidence: "★★★", examineSlug: "ashwagandha" },
+      { id: "rho", name: "Rhodiola",    description: "Fatigue & mentale Resilienz",  focus: "Stress", evidence: "★★☆", examineSlug: "rhodiola-rosea" },
+      { id: "cit", name: "L-Citrullin", description: "NO-Produktion & Durchblutung", focus: "Cardio", evidence: "★★★", examineSlug: "citrulline" },
+    ]
+  },
+  {
+    id: "p5",
+    title: "Portion 5",
+    meta: "Mittagessen",
+    subtitle: "Zu Mittag",
+    color: "#f59e0b",
+    supplements: [
+      { id: "q10", name: "CoQ10",       description: "Mitochondriale Energie",       focus: "AMPK",   evidence: "★★★", examineSlug: "coenzyme-q10" },
+      { id: "ala", name: "Alpha-Liponsäure", description: "Antioxidans & Insulinsensitivität", focus: "AMPK", evidence: "★★★", examineSlug: "alpha-lipoic-acid" },
+      { id: "pip", name: "Piperin",     description: "Bioverfügbarkeit +20–2000%",   focus: "neutral",evidence: "★★★", examineSlug: "piperine" },
+    ]
+  },
+  {
+    id: "p6",
+    title: "Portion 6",
+    meta: "Gehirn & Fokus",
+    subtitle: "Nachmittags",
+    color: "#22d3ee",
+    supplements: [
+      { id: "lion","name": "Lion's Mane","description": "NGF & neuronale Plastizität",focus: "neutral",evidence: "★★☆", examineSlug: "lions-mane-mushroom" },
+      { id: "bac", name: "Bacopa",       description: "Gedächtnis & Acetylcholin",   focus: "neutral",evidence: "★★★", examineSlug: "bacopa-monnieri" },
+      { id: "gin", name: "Ginkgo",       description: "Durchblutung & Kognition",    focus: "Cardio", evidence: "★★☆", examineSlug: "ginkgo-biloba" },
+    ]
+  },
+  {
+    id: "p7",
+    title: "Portion 7",
+    meta: "Abendessen",
+    subtitle: "Zu Abend",
+    color: "#fb7185",
+    supplements: [
+      { id: "cur", name: "Curcumin",     description: "Entzündungshemmung & NF-κB",  focus: "neutral",evidence: "★★★", examineSlug: "curcumin" },
+      { id: "que", name: "Quercetin",    description: "Senolytikum & Antioxidans",   focus: "AMPK",   evidence: "★★☆", examineSlug: "quercetin" },
+    ]
+  },
+  {
+    id: "p8",
+    title: "Portion 8",
+    meta: "Schlaf & Regeneration",
+    subtitle: "Vor dem Schlafen",
+    color: "#818cf8",
+    supplements: [
+      { id: "mel", name: "Melatonin",    description: "Schlafeinleitung & Antioxidans", focus: "Sleep", evidence: "★★★", examineSlug: "melatonin" },
+      { id: "gli", name: "Glycin",       description: "Schlafqualität & Kollagen",   focus: "Sleep",  evidence: "★★★", examineSlug: "glycine" },
+      { id: "l-t", name: "L-Theanin",   description: "Entspannung ohne Sedierung",  focus: "Stress", evidence: "★★★", examineSlug: "theanine" },
+      { id: "app", name: "Apigenin",     description: "Anxiolytikum & Schlaftiefe",  focus: "Sleep",  evidence: "★★☆", examineSlug: "apigenin" },
+    ]
+  }
+];
+
+let activePortionIdx = 0;
+let sheetSupplement = null;
+const state = {};
+portions.forEach(p => p.supplements.forEach(s => { state[s.id] = s.status || 'open'; }));
+
+function getAccentVars(color) {
+  const hex = color.replace('#','');
+  const r = parseInt(hex.substr(0,2),16);
+  const g = parseInt(hex.substr(2,2),16);
+  const b = parseInt(hex.substr(4,2),16);
+  return {
+    accent: color,
+    glow: `rgba(${r},${g},${b},0.18)`,
+    glass: `rgba(${r},${g},${b},0.08)`,
+    faint: `rgba(${r},${g},${b},0.2)`,
+  };
+}
+
+function applyAccent(color) {
+  const v = getAccentVars(color);
+  const root = document.documentElement;
+  root.style.setProperty('--accent', v.accent);
+  root.style.setProperty('--accent-glow', v.glow);
+  root.style.setProperty('--accent-glass', v.glass);
+  root.style.setProperty('--accent-faint', v.faint);
+  document.getElementById('logoIcon').style.background = color;
+  document.getElementById('logoIcon').style.boxShadow = `0 0 20px ${v.glow}`;
+}
+
+function getProgress() {
+  let done = 0, total = 0;
+  portions.forEach(p => p.supplements.forEach(s => { total++; if(state[s.id]==='done') done++; }));
+  return { done, total };
+}
+
+function renderProgress() {
+  const { done, total } = getProgress();
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('totalCount').textContent = ` / ${total}`;
+  const pct = total ? (done/total*100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function renderTabs() {
+  const container = document.getElementById('portionTabs');
+  container.innerHTML = '';
+  portions.forEach((p, idx) => {
+    const allDone = p.supplements.every(s => state[s.id] === 'done');
+    const div = document.createElement('div');
+    div.className = 'portion-tab' + (idx === activePortionIdx ? ' active' : '') + (allDone ? ' all-done' : '');
+    div.innerHTML = `<div class="portion-tab-title">${p.title}<span class="portion-tab-done-dot"></span></div><div class="portion-tab-meta">${p.meta}</div>`;
+    div.onclick = () => selectPortion(idx);
+    container.appendChild(div);
+  });
+}
+
+function renderHero() {
+  const p = portions[activePortionIdx];
+  const doneCount = p.supplements.filter(s => state[s.id]==='done').length;
+  const openCount = p.supplements.length - doneCount;
+  document.getElementById('heroLabel').textContent = p.title.toUpperCase();
+  document.getElementById('heroTitle').textContent = p.meta;
+  document.getElementById('heroSubtitle').textContent = '⌚ ' + p.subtitle;
+  document.getElementById('heroMeta').textContent = p.meta;
+  document.getElementById('heroTotal').textContent = p.supplements.length;
+  document.getElementById('heroDone').textContent = doneCount;
+  document.getElementById('heroOpen').textContent = openCount;
+  document.getElementById('suppSectionLabel').textContent = `SUPPLEMENTS · ${openCount} OFFEN`;
+  const allDone = openCount === 0;
+  document.getElementById('markAllBtn').textContent = allDone ? '✓ Alle erledigt' : 'Alle erledigt →';
+  document.getElementById('markAllBtn').style.opacity = allDone ? '0.5' : '1';
+}
+
+function renderSupplements() {
+  const p = portions[activePortionIdx];
+  const container = document.getElementById('supplementList');
+  container.innerHTML = '';
+  p.supplements.forEach(s => {
+    const isDone = state[s.id] === 'done';
+    const div = document.createElement('div');
+    div.className = 'supplement-card' + (isDone ? ' done' : '');
+    div.dataset.id = s.id;
+    div.innerHTML = `
+      <div class="supplement-card-tap-flash"></div>
+      <div class="supp-row">
+        <div class="supp-check">
+          <svg class="check-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="2,6 5,9 10,3"/>
+          </svg>
+        </div>
+        <div class="supp-body">
+          <div class="supp-name">${s.name}</div>
+          <div class="supp-desc">${s.description}</div>
+          <div class="supp-badges">
+            <span class="badge badge-focus-${s.focus.replace(/\s/g,'')}">${s.focus}</span>
+            <span class="badge badge-evidence">${s.evidence}</span>
+          </div>
+        </div>
+        <div class="supp-examine">
+          <a class="examine-link" href="https://examine.com/supplements/${s.examineSlug}/" target="_blank" onclick="event.stopPropagation()" title="Examine.com">
+            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </div>`;
+    div.onclick = (e) => {
+      if(e.target.closest('.examine-link')) return;
+      toggleSupplement(s.id, div);
+    };
+    div.addEventListener('contextmenu', (e) => { e.preventDefault(); openSheet(s); });
+    div.addEventListener('touchstart', () => {}, {passive: true});
+    container.appendChild(div);
+  });
+}
+
+function toggleSupplement(id, el) {
+  state[id] = state[id] === 'done' ? 'open' : 'done';
+  el.classList.toggle('done', state[id] === 'done');
+  el.classList.add('flashing');
+  setTimeout(() => el.classList.remove('flashing'), 300);
+  if(state[id] === 'done') showToast('✓ ' + portions[activePortionIdx].supplements.find(s=>s.id===id).name);
+  renderProgress();
+  renderHero();
+  renderTabs();
+}
+
+function selectPortion(idx) {
+  activePortionIdx = idx;
+  applyAccent(portions[idx].color);
+  renderTabs();
+  renderHero();
+  renderSupplements();
+  const tab = document.querySelectorAll('.portion-tab')[idx];
+  if(tab) tab.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+}
+
+function resetPortion() {
+  const p = portions[activePortionIdx];
+  p.supplements.forEach(s => { state[s.id] = 'open'; });
+  renderProgress();
+  renderHero();
+  renderSupplements();
+  renderTabs();
+  showToast('↺ Reset: ' + p.title);
+}
+
+function markAllDone() {
+  const p = portions[activePortionIdx];
+  const allDone = p.supplements.every(s => state[s.id] === 'done');
+  if(allDone) return;
+  p.supplements.forEach(s => { state[s.id] = 'done'; });
+  renderProgress();
+  renderHero();
+  renderSupplements();
+  renderTabs();
+  showToast('⚡ ' + p.title + ' abgeschlossen');
+}
+
+function openSheet(s) {
+  sheetSupplement = s;
+  document.getElementById('sheetName').textContent = s.name;
+  document.getElementById('sheetFocus').textContent = 'FOCUS: ' + s.focus;
+  document.getElementById('sheetDesc').textContent = s.description;
+  document.getElementById('sheetEvidence').textContent = s.evidence;
+  document.getElementById('sheetFocusVal').textContent = s.focus;
+  document.getElementById('sheetStatus').textContent = state[s.id] === 'done' ? '✓ Erledigt' : 'Offen';
+  document.getElementById('sheetExamineLink').href = `https://examine.com/supplements/${s.examineSlug}/`;
+  document.getElementById('sheetExamineLink').textContent = `→ examine.com/supplements/${s.examineSlug}/`;
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.getElementById('detailSheet').classList.add('open');
+}
+
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.getElementById('detailSheet').classList.remove('open');
+}
+
+function showSummary() {
+  const lines = portions.map(p => {
+    const done = p.supplements.filter(s => state[s.id]==='done').length;
+    return `${p.title}: ${done}/${p.supplements.length}`;
+  }).join('\n');
+  alert('── TAGES-SUMMARY ──\n\n' + lines);
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Init
+applyAccent(portions[0].color);
+renderProgress();
+renderTabs();
+renderHero();
+renderSupplements();
+</script>
+</body>
+</html>

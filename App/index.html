@@ -460,6 +460,33 @@
     margin-left: auto;
     flex-shrink: 0;
   }
+  .info-link {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+  cursor: pointer;
+  padding: 0;
+}
+
+.info-link:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--border-strong);
+}
+
+.info-link svg {
+  width: 12px;
+  height: 12px;
+  stroke: var(--text-muted);
+  fill: none;
+  stroke-width: 1.7;
+}
   .examine-link {
     width: 26px;
     height: 26px;
@@ -1022,23 +1049,31 @@ function renderSupplements() {
           </div>
         </div>
         <div class="supp-examine">
-          <a class="examine-link" href="https://examine.com/supplements/${s.examineSlug}/" target="_blank" onclick="event.stopPropagation()" title="Examine.com">
-            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
-        </div>
+  <button class="info-link" type="button" title="Details">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"></circle>
+      <line x1="12" y1="10" x2="12" y2="16"></line>
+      <circle cx="12" cy="7" r="1"></circle>
+    </svg>
+  </button>
+
+  <a class="examine-link" href="https://examine.com/supplements/${s.examineSlug}/" target="_blank" onclick="event.stopPropagation()" title="Examine.com">
+    <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+  </a>
+</div>
       </div>
     `;
 
     div.onclick = (e) => {
-      if (e.target.closest('.examine-link')) return;
-      toggleSupplement(s.id, div);
-    };
+  if (e.target.closest('.examine-link')) return;
+  if (e.target.closest('.info-link')) {
+    openSheet(s);
+    return;
+  }
+  toggleSupplement(s.id, div);
+};
 
-    div.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      openSheet(s);
-    });
-
+    
     div.addEventListener('touchstart', () => {}, { passive: true });
 
     container.appendChild(div);

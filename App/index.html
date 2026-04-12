@@ -154,14 +154,15 @@
     overflow: hidden;
   }
   .portion-tabs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 4px 20px 12px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    scroll-snap-type: x mandatory;
-  }
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 20px 12px;
+  scroll-padding: 0 20px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
+}
   .portion-tabs::-webkit-scrollbar { display: none; }
   .portion-tab {
     flex-shrink: 0;
@@ -487,8 +488,8 @@
     z-index: 100;
   }
   .action-btn {
-    flex: 1;
-    padding: 14px;
+  flex: 1;
+  padding: 12px;
     border-radius: var(--radius-md);
     border: 0.5px solid var(--border);
     background: var(--surface);
@@ -695,6 +696,7 @@
 
 <div class="bottom-bar">
   <button class="action-btn" onclick="resetPortion()">Reset Portion</button>
+  <button class="action-btn" onclick="resetWholeDayConfirm()">Reset Tag</button>
   <button class="action-btn primary" id="markAllBtn" onclick="markAllDone()">Alle erledigt →</button>
 </div>
 
@@ -913,7 +915,11 @@ function resetWholeDay() {
   renderSupplements();
   showToast('↺ Neuer Tag gestartet');
 }
-
+function resetWholeDayConfirm() {
+  const ok = confirm('Wirklich den ganzen Tag zurücksetzen?\n\nAlle abgehakten Supplements werden gelöscht.');
+  if (!ok) return;
+  resetWholeDay();
+}
 function getAccentVars(color) {
   const hex = color.replace('#','');
   const r = parseInt(hex.substr(0,2),16);
@@ -1151,6 +1157,34 @@ renderSupplements();
 if (didAutoResetToday) {
   showToast('☀️ Neuer Tag, frischer Start');
 }
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+
+  try {
+    const parsed = JSON.parse(raw);
+    const today = getTodayString();
+
+    if (parsed.dayStamp !== today) {
+      // neuer Tag erkannt → Reset
+      applyEmptyState();
+      activePortionIdx = 0;
+      saveAppState();
+
+      applyAccent(portions[0].color);
+      renderProgress();
+      renderTabs();
+      renderHero();
+      renderSupplements();
+
+      showToast("☀️ Neuer Tag erkannt");
+    }
+  } catch (e) {
+    console.error("visibilitychange error:", e);
+  }
+});
 </script>
 </body>
 </html>
